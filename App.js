@@ -6,8 +6,14 @@ import {
   ApolloClient,
   InMemoryCache,
   createHttpLink,
+  split,
+  HttpLink,
   ApolloProvider,
 } from "@apollo/client";
+import { getMainDefinition } from "@apollo/client/utilities";
+import * as AbsintheSocket from "@absinthe/socket";
+import { createAbsintheSocketLink } from "@absinthe/socket-apollo-link";
+import { Socket as PhoenixSocket } from "phoenix";
 import { setContext } from "@apollo/client/link/context";
 import MainView from "./src/views/MainView/MainView";
 import ChatView from "./src/views/ChatView/ChatView";
@@ -15,10 +21,10 @@ import ChatView from "./src/views/ChatView/ChatView";
 const httpLink = createHttpLink({
   uri: "https://chat.thewidlarzgroup.com/api/graphql",
 });
+const token =
+  "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJjaGF0bHkiLCJleHAiOjE2MDU1MjE4NjMsImlhdCI6MTYwMzEwMjY2MywiaXNzIjoiY2hhdGx5IiwianRpIjoiNGZiNjI4ZWMtNTYxNC00ZTQ0LWI5NTQtM2ZkYWVjMTI3YmVhIiwibmJmIjoxNjAzMTAyNjYyLCJzdWIiOiJjNGFiMmUyNS0zNzFjLTQyMzctYjU0ZC01Y2FiNWZhN2E2Y2QiLCJ0eXAiOiJhY2Nlc3MifQ.rl3mL-Uu9aqYfKB-QzwIoSPBnpiwd0h3jVyEsdwh8Q5BGW8AP7k7CsWMM4pxBQzEisGZkvUPBz6g5lw3w160kw";
 
 const authLink = setContext((_, { headers }) => {
-  const token =
-    "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJjaGF0bHkiLCJleHAiOjE2MDU1MjE4NjMsImlhdCI6MTYwMzEwMjY2MywiaXNzIjoiY2hhdGx5IiwianRpIjoiNGZiNjI4ZWMtNTYxNC00ZTQ0LWI5NTQtM2ZkYWVjMTI3YmVhIiwibmJmIjoxNjAzMTAyNjYyLCJzdWIiOiJjNGFiMmUyNS0zNzFjLTQyMzctYjU0ZC01Y2FiNWZhN2E2Y2QiLCJ0eXAiOiJhY2Nlc3MifQ.rl3mL-Uu9aqYfKB-QzwIoSPBnpiwd0h3jVyEsdwh8Q5BGW8AP7k7CsWMM4pxBQzEisGZkvUPBz6g5lw3w160kw";
   return {
     headers: {
       ...headers,
@@ -27,8 +33,39 @@ const authLink = setContext((_, { headers }) => {
   };
 });
 
+const authedHttpLink = authLink.concat(httpLink);
+
+const phoenixSocket = new PhoenixSocket(
+  "wss://chat.thewidlarzgroup.com/socket",
+  {
+    params: () => {
+      if (token) {
+        return {
+          token: token,
+        };
+      } else {
+        return {};
+      }
+    },
+  }
+);
+const absintheSocket = AbsintheSocket.create(phoenixSocket);
+const wsLink = createAbsintheSocketLink(absintheSocket);
+
+const splitLink = split(
+  ({ query }) => {
+    const definition = getMainDefinition(query);
+    return (
+      definition.kind === "OperationDefinition" &&
+      definition.operation === "subscription"
+    );
+  },
+  wsLink,
+  authedHttpLink
+);
+
 const client = new ApolloClient({
-  link: authLink.concat(httpLink),
+  link: splitLink,
   cache: new InMemoryCache(),
 });
 
@@ -47,7 +84,10 @@ export default function App() {
           <Stack.Screen
             name="Chat room"
             component={ChatView}
-            options={({ route }) => ({ title: route.params.title })}
+            options={({ route }) => ({
+              title: route.params.title,
+              id: route.params.id,
+            })}
           />
         </Stack.Navigator>
       </NavigationContainer>

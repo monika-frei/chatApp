@@ -1,12 +1,12 @@
 import React from "react";
 import { View } from "react-native";
-import Chat from "../../components/Chat/Chat";
+import ChatWithData from "../../components/ChatWithData/ChatWithData";
 
 const ChatView = ({ route }) => {
   const { id } = route.params;
   return (
     <View style={{ width: "100%", height: "100%" }}>
-      <Chat id={id} />
+      <ChatWithData id={id} />
     </View>
   );
 };

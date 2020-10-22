@@ -1,22 +1,21 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { View, Text } from "react-native";
 import { GiftedChat } from "react-native-gifted-chat";
-import {
-  GET_MESSAGES,
-  SEND_MESSAGE,
-  MESSAGES_SUBSCRIPTION,
-} from "../../queries/index";
-import { useQuery, useMutation, useSubscription } from "@apollo/client";
+import { SEND_MESSAGE, MESSAGES_SUBSCRIPTION } from "../../queries/index";
+import { useMutation, useSubscription } from "@apollo/client";
 
-const Chat = ({ id }) => {
+const Chat = ({ id, result }) => {
   const [messages, setMessages] = useState([]);
-  const { loading, error, data } = useQuery(GET_MESSAGES, {
-    variables: { id },
-  });
+  const [user, setUser] = useState("");
   const [sendMessage, { sendData }] = useMutation(SEND_MESSAGE);
 
+  // something went wrong -->
+
+  // const { data, loading } = useSubscription(MESSAGES_SUBSCRIPTION, {
+  //   variables: { roomId: id },
+  // });
+
   useEffect(() => {
-    const dataMessages = data ? data.room.messages : [];
+    const dataMessages = result ? result.room.messages : [];
     const array =
       dataMessages &&
       dataMessages.map((message) => {
@@ -31,7 +30,8 @@ const Chat = ({ id }) => {
         };
       });
     setMessages(array);
-  }, [data]);
+    result && setUser(result.room.user.id);
+  }, [result]);
 
   const onSend = useCallback((messages = []) => {
     sendMessage({
@@ -45,15 +45,12 @@ const Chat = ({ id }) => {
     );
   }, []);
 
-  if (loading) return <Text>Loading...</Text>;
-  if (error) return <Text>`Error! ${error.message}`</Text>;
-
   return (
     <GiftedChat
       messages={messages}
       onSend={(messages) => onSend(messages)}
       user={{
-        _id: data.room.user.id,
+        _id: user,
       }}
     />
   );

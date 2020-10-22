@@ -19,7 +19,7 @@ export const GET_ROOMS = gql`
 `;
 
 export const GET_MESSAGES = gql`
-  query room($id: String!) {
+  query room($id: ID!) {
     room(id: $id) {
       id
       messages {
@@ -62,7 +62,7 @@ export const SEND_MESSAGE = gql`
     }
   }
 `;
-const MESSAGES_SUBSCRIPTION = gql`
+export const MESSAGES_SUBSCRIPTION = gql`
   subscription OnMessageAdded($roomId: String!) {
     messageAdded(roomId: $roomId) {
       body

@@ -10,7 +10,7 @@ import {
   HttpLink,
   ApolloProvider,
 } from "@apollo/client";
-import { getMainDefinition } from "@apollo/client/utilities";
+import { hasSubscription } from "@jumpn/utils-graphql";
 import * as AbsintheSocket from "@absinthe/socket";
 import { createAbsintheSocketLink } from "@absinthe/socket-apollo-link";
 import { Socket as PhoenixSocket } from "phoenix";
@@ -51,15 +51,8 @@ const phoenixSocket = new PhoenixSocket(
 );
 const absintheSocket = AbsintheSocket.create(phoenixSocket);
 const wsLink = createAbsintheSocketLink(absintheSocket);
-
 const splitLink = split(
-  ({ query }) => {
-    const definition = getMainDefinition(query);
-    return (
-      definition.kind === "OperationDefinition" &&
-      definition.operation === "subscription"
-    );
-  },
+  (operation) => hasSubscription(operation.query),
   wsLink,
   authedHttpLink
 );

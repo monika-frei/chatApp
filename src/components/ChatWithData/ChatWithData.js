@@ -1,32 +1,16 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React from "react";
+import { Text } from "react-native";
 import Chat from "../Chat/Chat";
-import { GET_MESSAGES, MESSAGES_SUBSCRIPTION } from "../../queries/index";
+import { GET_MESSAGES } from "../../queries/index";
 import { useQuery } from "@apollo/client";
 
 const ChatWithData = ({ id }) => {
-  const { subscribeToMore, ...result } = useQuery(GET_MESSAGES, {
+  const { loading, error, data } = useQuery(GET_MESSAGES, {
     variables: { id: id },
   });
-
-  return (
-    <Chat
-      {...result}
-      id={id}
-      subscribeToNewMessage={() =>
-        subscribeToMore({
-          document: MESSAGES_SUBSCRIPTION,
-          variables: { roomId: id },
-          updateQuery: (prev, { subscriptionData }) => {
-            if (!subscriptionData.data) return prev;
-            const newFeedItem = subscriptionData.data.messageAdded;
-            return Object.assign({}, prev, {
-              room: { messages: [newFeedItem, ...prev.room.messages] },
-            });
-          },
-        })
-      }
-    />
-  );
+  if (loading) return <Text>"Loading..."</Text>;
+  if (error) return <Text>`Error! ${error.message}`</Text>;
+  return <Chat result={data} id={id} />;
 };
 
 export default ChatWithData;

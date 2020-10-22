@@ -63,7 +63,7 @@ export const SEND_MESSAGE = gql`
   }
 `;
 export const MESSAGES_SUBSCRIPTION = gql`
-  subscription OnMessageAdded($roomId: String!) {
+  subscription Message($roomId: String!) {
     messageAdded(roomId: $roomId) {
       body
       id

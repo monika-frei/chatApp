@@ -1,17 +1,21 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { GiftedChat } from "react-native-gifted-chat";
-import { SEND_MESSAGE } from "../../queries/index";
-import { useMutation } from "@apollo/client";
+import { SEND_MESSAGE, MESSAGES_SUBSCRIPTION } from "../../queries/index";
+import { useMutation, useSubscription } from "@apollo/client";
 
-const Chat = ({ id, subscribeToNewMessage, ...result }) => {
+const Chat = ({ id, result }) => {
   const [messages, setMessages] = useState([]);
   const [user, setUser] = useState("");
   const [sendMessage, { sendData }] = useMutation(SEND_MESSAGE);
 
+  // something went wrong -->
+
+  // const { data, loading } = useSubscription(MESSAGES_SUBSCRIPTION, {
+  //   variables: { roomId: id },
+  // });
+
   useEffect(() => {
-    subscribeToNewMessage();
-    const data = result.data;
-    const dataMessages = data ? data.room.messages : [];
+    const dataMessages = result ? result.room.messages : [];
     const array =
       dataMessages &&
       dataMessages.map((message) => {
@@ -26,8 +30,8 @@ const Chat = ({ id, subscribeToNewMessage, ...result }) => {
         };
       });
     setMessages(array);
-    data && setUser(result.data.room.user.id);
-  }, [result.data]);
+    result && setUser(result.room.user.id);
+  }, [result]);
 
   const onSend = useCallback((messages = []) => {
     sendMessage({

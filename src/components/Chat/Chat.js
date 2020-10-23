@@ -64,9 +64,9 @@ const Chat = ({ id, result }) => {
         roomId: id,
       },
     });
-    setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, messages)
-    );
+//     setMessages((previousMessages) =>
+//       GiftedChat.append(previousMessages, messages)
+//     );
   }, []);
 
   return (

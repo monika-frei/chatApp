@@ -10,9 +10,33 @@ const Chat = ({ id, result }) => {
 
   // something went wrong -->
 
-  // const { data, loading } = useSubscription(MESSAGES_SUBSCRIPTION, {
-  //   variables: { roomId: id },
-  // });
+  const { data } = useSubscription(MESSAGES_SUBSCRIPTION, {
+    variables: { roomId: id },
+  });
+
+  useEffect(() => {
+    if (data?.messageAdded) {
+      const {
+        body,
+        id,
+        insertedAt,
+        user: { id: userId, firstName },
+      } = data.messageAdded;
+
+      setMessages((prev) => [
+        {
+          _id: id,
+          text: body,
+          createdAt: insertedAt,
+          user: {
+            _id: userId,
+            name: firstName,
+          },
+        },
+        ...prev,
+      ]);
+    }
+  }, [data]);
 
   useEffect(() => {
     const dataMessages = result ? result.room.messages : [];
@@ -40,9 +64,9 @@ const Chat = ({ id, result }) => {
         roomId: id,
       },
     });
-    setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, messages)
-    );
+//     setMessages((previousMessages) =>
+//       GiftedChat.append(previousMessages, messages)
+//     );
   }, []);
 
   return (

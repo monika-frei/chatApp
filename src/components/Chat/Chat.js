@@ -8,8 +8,6 @@ const Chat = ({ id, result }) => {
   const [user, setUser] = useState("");
   const [sendMessage, { sendData }] = useMutation(SEND_MESSAGE);
 
-  // something went wrong -->
-
   const { data } = useSubscription(MESSAGES_SUBSCRIPTION, {
     variables: { roomId: id },
   });
@@ -64,9 +62,9 @@ const Chat = ({ id, result }) => {
         roomId: id,
       },
     });
-//     setMessages((previousMessages) =>
-//       GiftedChat.append(previousMessages, messages)
-//     );
+    // setMessages((previousMessages) =>
+    //   GiftedChat.append(previousMessages, messages)
+    // );
   }, []);
 
   return (
